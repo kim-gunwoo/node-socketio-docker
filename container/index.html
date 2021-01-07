@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <style>
+      #chatlog {
+        width: 380px;
+        height: 200px;
+      }
+      #room,
+      #name {
+        width: 50px;
+      }
+      #message {
+        width: 250px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>socket io</h2>
+    <div id="root">
+      <textarea id="chatlog" readonly></textarea>
+      <form id="chat">
+        <input id="room" placeholder="방명" type="text" v-model="room" />
+        <input id="name" placeholder="유저명" type="text" v-model="name" />
+        <input
+          id="message"
+          type="text"
+          v-model="chat"
+          v-on:keyup.enter="onClick"
+        />
+        <input type="button" v-on:click="onClick" value="send" />
+      </form>
+    </div>
+
+    <script>
+      const socket = io();
+
+      socket.on("receive", (msg) => {
+        const chatlog = document.querySelector("#chatlog");
+        chatlog.append(msg + "\n");
+        chatlog.scrollTop = chatlog.scrollHeight;
+      });
+
+      new Vue({
+        el: "#root",
+        data: {
+          room: "",
+          name: "",
+          chat: "",
+        },
+        created() {
+          socket.on("new", (name) => {
+            this.name = name;
+          });
+        },
+        methods: {
+          onClick() {
+            socket.emit("joinRoom", this.room, this.name);
+            socket.emit("send", this.room, this.name, this.chat);
+            this.chat = "";
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
